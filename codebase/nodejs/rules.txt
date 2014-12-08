@@ -1,0 +1,13 @@
+1. client: joinroom
+2. client: startgame
+3. server: game_start
+4. client: readytoplay
+5. server -> startgamerom
+6. server -> broadcastquestion
+7. server: question
+8. client: answer
+9a. server: incorrect_result
+9b. server: correct_answer
+10. server -> nextQuestion -> back to 7.
+
+x. server: game_finish
