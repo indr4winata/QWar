@@ -5,7 +5,7 @@ var chat = {
 			connection.query("select user_id, name from user where user_id = ?",[user_id], function(err2, rows2){
 				if (err2){
 					console.log("Error delete usergame : %s ",err2);
-					io.emit('error', "Error delete usergame");
+					socket.emit('error_message', "Error delete usergame");
 				}else{						
 					var messagesent = {userdata:rows2[0],message:message};
 					io.sockets.in(guid).emit('chat_received',messagesent);

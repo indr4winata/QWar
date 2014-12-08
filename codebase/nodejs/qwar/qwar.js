@@ -35,7 +35,7 @@ io.on('connection', function(socket){
 				console.log("query success!");
 				if (err){
 					console.log("Error select question : %s ",err );
-					io.emit('error', "Error select question");
+					socket.emit('error_message', "Error select question");
 				}else{
 					console.log("rows.length: "+rows.length);
 					if(rows.length > 0){
@@ -53,7 +53,7 @@ io.on('connection', function(socket){
 						connection.query("delete from gamequestion where guid=?",[guid], function(err3, rows3){
 							if (err3){
 								console.log("Error delete gamequestion : %s ",err3);
-								io.emit('error', "Error delete gamequestion");
+								socket.emit('error_message', "Error delete gamequestion");
 							}else{
 								console.log("insert to gamequestion: "+values.length);
 								console.log(JSON.stringify(values));
@@ -66,7 +66,7 @@ io.on('connection', function(socket){
 											console.log("update success!");								  
 											if (err4){
 												console.log("Error select question : %s ",err4 );
-												io.emit('error', "Error select question");
+												socket.emit('error_message', "Error select question");
 											}else{
 												//validateReadyPlayer(guid,false);
 												io.sockets.in(room_id).emit('game_start');
@@ -81,7 +81,7 @@ io.on('connection', function(socket){
 							}
 						});
 					} else {
-						io.emit('error', "topic is not found");
+						socket.emit('error_message', "topic is not found");
 					}										
 				}
 			});
@@ -90,7 +90,7 @@ io.on('connection', function(socket){
 			connection.query("update gameroom set status='S' where guid=?",[guid], function(err, rows){  
 				if (err){
 					console.log("Error update gameroom : %s ",err);
-					io.emit('error', "Error update gameroom");
+					socket.emit('error_message', "Error update gameroom");
 				}else{
 					onSuccess();
 				}
@@ -102,13 +102,13 @@ io.on('connection', function(socket){
 			connection.query("select * from gameroom where guid=?",[guid], function(err, rows){  
 				if (err){
 					console.log("Error select question : %s ",err);
-					io.emit('error', "Error select question");
+					socket.emit('error_message', "Error select question");
 				}else{
 					if(rows.length>0){
 						onSuccess(rows[0]);
 					}else{
 						console.log("gameroom is not found");
-						io.emit('error', "gameroom is not found");
+						socket.emit("error_message", "gameroom is not found");
 					}
 				}
 			});
@@ -118,7 +118,7 @@ io.on('connection', function(socket){
 			connection.query("update gameroom set active_question_no=active_question_no+1 where guid=?",[guid], function(err, rows){  
 				if (err){
 					console.log("Error update gameroom : %s ",err);
-					io.emit('error', "Error update gameroom");
+					socket.emit('error_message', "Error update gameroom");
 				}else{
 					onSuccess();
 				}
@@ -130,7 +130,7 @@ io.on('connection', function(socket){
 			connection.query("select * from usergame where guid=? and hp > 0",[guid], function(err, rows){  
 				if (err){
 					console.log("Error checkPlayerHP : %s ",err);
-					io.emit('error', "Error checkPlayerHP");
+					socket.emit('error_message', "Error checkPlayerHP");
 				}else{
 					if(rows.length > 1){
 						//game can continue
@@ -149,7 +149,7 @@ io.on('connection', function(socket){
 			connection.query("select * from usergame where guid=? and user_id =?",[guid,user_id], function(err, rows){  
 				if (err){
 					console.log("Error checkPlayerHP : %s ",err);
-					io.emit('error', "Error checkPlayerHP");
+					socket.emit('error_message', "Error checkPlayerHP");
 				}else{
 					if(rows.length > 0){
 						if(rows[0].hp > 0){
@@ -170,7 +170,7 @@ io.on('connection', function(socket){
 			retreiveGameRoom(room_id, function(gameroom){
 				var question_no = gameroom.active_question_no;
 				if(question_no > question_per_game){
-					gameresult.reconcile(console, connection, io, request, room_id);
+					gameresult.reconcile(console, connection, io,socket, request, room_id);
 				}else {
 				
 					checkPlayerHP(room_id, function(){
@@ -178,7 +178,7 @@ io.on('connection', function(socket){
 						connection.query("select question.* from gamequestion gq, question where  gq.question_id=question.question_id and gq.guid=? and gq.question_no=?",[room_id,question_no], function(err, rows){  
 							if (err){
 								console.log("Error select question : %s ",err);
-								io.emit('error', "Error select question");
+								socket.emit('error_message', "Error select question");
 							}else{
 								if(rows.length > 0){
 									console.log("Question id: "+rows[0].question_id);
@@ -194,7 +194,7 @@ io.on('connection', function(socket){
 												//trigger new question
 												nextQuestion(room_id, function(){
 													//waiting for the animation..
-													attackanimation.attack(console, connection, io, room_id, 0, function(){
+													attackanimation.attack(console, connection, io, socket,room_id, 0, function(){
 														setTimeout(function() { 
 															//broadcast the question
 															broadcastQuestion(room_id);
@@ -205,14 +205,14 @@ io.on('connection', function(socket){
 										});
 									}, rows[0].question_time_second*1000);					
 								}else {
-									io.emit('error', "Question is not found");
+									socket.emit('error_message', "Question is not found");
 								}
 							}
 						});	
 					
 					},
 					function (){
-						gameresult.reconcile(console, connection, io, request, room_id);
+						gameresult.reconcile(console, connection, io, socket, request, room_id);
 					});
 				
 					
@@ -230,7 +230,7 @@ io.on('connection', function(socket){
 				console.log("update success!");
 				if (err){
 					console.log("Error select question : %s ",err );
-					io.emit('error', "Error select question");
+					socket.emit('error_message', "Error select question");
 				}else{
 					//check all ready or not..
 					validateReadyPlayer(guid,false);
@@ -248,7 +248,7 @@ io.on('connection', function(socket){
 					connection.query("select question.* from gamequestion gq, question where gq.question_id=question.question_id and gq.guid=? and gq.question_no=? and gq.correct_replier_id is null",[room_id,question_no], function(err, rows){  
 						if (err){
 							console.log("Error select question : %s ",err);
-							io.emit('error', "Error select question");
+							socket.emit('error_message', "Error select question");
 						}else{
 							if(rows.length > 0){
 								if(rows[0].question_answer.toUpperCase() === answer.toUpperCase()){
@@ -257,13 +257,13 @@ io.on('connection', function(socket){
 									connection.query("update gamequestion set correct_replier_id=? ,question_closed_date=now() where guid=? and question_no=?",[user_id,guid,question_no], function(err2, rows2){
 										if (err2){
 											console.log("Error update usergame : %s ",err2);
-											io.emit('error', "Error update usergame");
+											socket.emit('error_message', "Error update usergame");
 										}else{
 											var data = { user_id:user_id, question_answer:rows[0].question_answer };
 											io.sockets.in(room_id).emit('correct_answer',data);
 											nextQuestion(room_id, function(){
 												//waiting for the animation..
-												attackanimation.attack(console, connection,io, room_id, user_id, function(){
+												attackanimation.attack(console, connection,io,socket, room_id, user_id, function(){
 													setTimeout(function() { 
 														//broadcast the question
 														broadcastQuestion(room_id);
@@ -274,10 +274,10 @@ io.on('connection', function(socket){
 									});								
 								}else {
 									console.log('false!');
-									io.emit('incorrect_result');
+									socket.emit('incorrect_result');
 								}
 							}else {
-								io.emit('error', "Question is not found");
+								socket.emit('error_message', "Question is not found");
 							}
 						}
 					});	
@@ -290,7 +290,7 @@ io.on('connection', function(socket){
 		
 		socket.on('disconnect', function(){
 //			console.log(socket.creator);
-			
+			try{
 			retreiveGameRoom(socket.room, function(gameroom){
 	//			console.log('gameroom.status: '+gameroom.status);
 				if(gameroom.status=='N'){			
@@ -310,6 +310,9 @@ io.on('connection', function(socket){
 					socket.leave(socket.room);
 				}
 			});
+			} catch(exx){
+				console.log(exx);			
+			}
 			
 			console.log('user disconnected');
 			

@@ -1,6 +1,6 @@
 var host_url_gameresult = "http://indr4winata.koding.io/qwar/node/reconcile";
 var gameresult = {
-	reconcile : function(console, connection, io, request, guid){
+	reconcile : function(console, connection, io, socket, request, guid){
 		console.log("reconcile");
 		
 		connection.query("update gameroom set status='E' where guid=?",[guid], function(err4, rows4)
@@ -10,7 +10,7 @@ var gameresult = {
 			if (err4)
 			{
 				console.log("Error select question : %s ",err4 );
-				io.emit('error', "Error select question");
+				socket.emit('error_message', "Error select question");
 			}
 			else{
 				request({
@@ -21,7 +21,8 @@ var gameresult = {
 						}			
 				},
 				function(error,response,body){
-					io.emit('game_finish');
+					io.sockets.in(guid).emit('game_finish');
+					//socket.emit('game_finish');
 				});
 			}
 		});		

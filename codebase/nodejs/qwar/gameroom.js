@@ -2,7 +2,6 @@ var gameroom = {
 	init : function(console, connection, io, socket){
 		 socket.on('joinroom', function(guid, user_id,creator){
 			console.log('joinroom: '+guid);
-		
 			try {
 			
 			var room_id = guid;
@@ -17,7 +16,7 @@ var gameroom = {
 						if (err)
 						{
 							console.log("Error select gameroom : %s ",err );
-							io.emit('error', "Error select gameroom");
+							socket.emit('error_message', "Error select gameroom");
 						}
 						else{
 							
@@ -31,12 +30,12 @@ var gameroom = {
 								io.sockets.in(room_id).emit('new_user_join',user_id);
 
 							} else {					
-								io.emit('error', "GUID is not found");
+								socket.emit('error_message', "GUID is not found");
 							}										
 						}
 				});			
 			}catch (ex) {
-				io.emit('error', ex);
+				socket.emit('error_message', ex);
 			}	
 		});
 		
@@ -62,7 +61,7 @@ var gameroom = {
 							if (err2)
 							{
 								console.log("Error delete usergame : %s ",err2);
-								io.emit('error', "Error delete usergame");
+								socket.emit('error_message', "Error delete usergame");
 							}
 							else{						
 								socket.leave(room_id);
